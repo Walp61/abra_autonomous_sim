@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+  <model name="my_box">
+    <static>false</static>
+    <link name="base_link">
+    <gravity>false</gravity> 
+      <collision name="collision">
+        <geometry>
+   	 <mesh>
+   	   <uri>model://ENGEL/meshes/model.stl</uri>
+   	 </mesh>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.0</mu>     <!-- Ana sürtünme katsayısı -->
+              <mu2>0.0</mu2>   <!-- Yan sürtünme katsayısı -->
+            </ode>
+          </friction>
+          <bounce>
+            <restitution_coefficient>0.0</restitution_coefficient> <!-- zıplama yok -->
+            <threshold>1.0</threshold>
+          </bounce>
+          <contact>
+            <ode/>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual">
+        <geometry>
+  	  <mesh>
+    		<uri>model://ENGEL/meshes/model.stl</uri>
+   	 </mesh>
+        </geometry>
+      </visual>
+    </link>
+
+    <!-- Gazebo ROS Plugin: planar_move -->
+    <plugin name="planar_move" filename="libgazebo_ros_planar_move.so">
+      <ros>
+        <namespace>/obstacle</namespace>
+        <remapping>cmd_vel:=/obstacle/cmd_vel</remapping>
+      </ros>
+      <body_name>base_link</body_name>
+    </plugin>
+  </model>
+</sdf>
+

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="abra" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+  <xacro:property name="half_front_track_width" value="0.6" />
+  <xacro:property name="half_rear_track_width" value="0.6" />
+  <xacro:property name="half_wheelbase" value="0.75" />
+
+  <xacro:property name="wheel_radius" value="0.36" />
+  <xacro:property name="wheel_thickness" value="0.25" />
+  <xacro:property name="wheel_mass" value="40.0" />
+
+  <xacro:property name="body_mass" value="300" />
+  <xacro:property name="body_width" value="${2*half_rear_track_width}" />
+  <xacro:property name="body_depth" value="${2*half_wheelbase + 0.8}" />
+  <xacro:property name="body_length" value="0.6" />
+
+  <xacro:macro name="rear_wheel" params="name x y z flip" >
+    <link name="wheel_${name}" >
+      <visual>
+        <origin xyz="0 0 0" rpy="1.57079632679 ${flip * 3.1415926535} 0" />
+        <geometry>
+          <mesh filename="$(find abra_description)/meshes/wheel.dae" scale="1 1 1" />
+        </geometry>
+      </visual>
+
+      <collision>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_thickness}" />
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="${wheel_mass}"/>
+        <inertia ixx="${wheel_mass/12*(3*wheel_radius*wheel_radius + wheel_thickness*wheel_thickness)}" ixy="0" ixz="0" iyy="${wheel_mass/12*(3*wheel_radius*wheel_radius + wheel_thickness*wheel_thickness)}" iyz="0" izz="${wheel_mass/2 * wheel_radius*wheel_radius}"/>
+      </inertial>
+
+    </link>
+
+    <joint name="wheel_${name}_joint" type="continuous" >
+      <parent link="base_link" />
+      <child link="wheel_${name}" />
+      <origin xyz="${x} ${y} ${z}" rpy="-1.57079632679 0 0" />
+      <axis xyz="0 0 1" />
+      <limit effort="-1.0" velocity="-1.0" />
+    </joint>
+
+  </xacro:macro>
+
+  <xacro:macro name="front_wheel" params="name x y z flip" >
+    <link name="wheel_${name}" >
+      <visual>
+        <origin xyz="0 0 0" rpy="1.57079632679 ${flip * pi} 0" />
+        <geometry>
+          <mesh filename="$(find abra_description)/meshes/wheel.dae" scale="1 1 1" />
+        </geometry>
+      </visual>
+
+      <collision>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_thickness}" />
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="${wheel_mass}"/>
+        <inertia ixx="${wheel_mass/12*(3*wheel_radius*wheel_radius + wheel_thickness*wheel_thickness)}" ixy="0" ixz="0" iyy="${wheel_mass/12*(3*wheel_radius*wheel_radius + wheel_thickness*wheel_thickness)}" iyz="0" izz="${wheel_mass/2 * wheel_radius*wheel_radius}"/>
+      </inertial>
+    </link>
+
+    <link name="steer_${name}" >
+      <inertial>
+        <origin xyz="-0.013054 -0.0295 0" rpy="0 0 0"/>
+        <mass value="20.0"/>
+        <inertia ixx="2" ixy="0" ixz="0" iyy="2" iyz="0" izz="2"/>
+      </inertial>
+    </link>
+
+    <joint name="steer_${name}_joint" type="revolute" >
+      <parent link="base_link" />
+      <child link="steer_${name}" />
+      <origin xyz="${x} ${y} ${z}" rpy="0 0 0" />
+      <axis xyz="0 0 1" />
+      <limit upper="0.6" lower="-0.6" effort="-1.0" velocity="-1.0" />
+    </joint>
+
+    <joint name="wheel_${name}_joint" type="continuous" >
+      <parent link="steer_${name}" />
+      <child link="wheel_${name}" />
+      <origin xyz="0 0 0" rpy="-1.57079632679 0 0" />
+      <axis xyz="0 0 1" />
+      <limit effort="-1.0" velocity="-1.0" />
+    </joint>
+  </xacro:macro>
+
+  <link name="base_footprint"/>
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="0.035 0 0.025" rpy="0 0 -3.14" /> <!-- yaw angle is -3.14 because our dae model is flipped.-->
+      <geometry>
+          <mesh filename="$(find abra_description)/meshes/chassis.dae" scale="1 1 1" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.035 0 0.025" rpy="0 0 -3.14" /> <!-- yaw angle is -3.14 because our dae model is flipped.-->
+      <geometry>
+        <mesh filename="$(find abra_description)/meshes/chassis.dae" scale="1 1 1" /> 
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${body_mass}"/>
+      <inertia ixx="${body_mass/12 * (body_width*body_width + body_length*body_length)}" ixy="0" ixz="0" iyy="${body_mass/12 * (body_length*body_length + body_depth*body_depth)}" iyz="0" izz="${body_mass/12 * (body_width*body_width + body_depth*body_depth)}"/>
+    </inertial>
+  </link>
+
+  <joint name="base_link_joint" type="fixed">
+    <origin xyz="${half_wheelbase} 0 ${wheel_radius}" rpy="0 0 0"/>
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+  </joint>
+
+  <xacro:rear_wheel name="rl" x="${-half_wheelbase}" y="${half_rear_track_width}" z="0" flip="1" />
+  <xacro:rear_wheel name="rr" x="${-half_wheelbase}" y="${-half_rear_track_width}" z="0" flip="0" />
+  <xacro:front_wheel name="fl" x="${half_wheelbase}" y="${half_front_track_width}" z="0" flip="1" />
+  <xacro:front_wheel name="fr" x="${half_wheelbase}" y="${-half_front_track_width}" z="0" flip="0" />
+
+  <gazebo reference="base_link" >
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+  </gazebo>
+
+  <gazebo reference="wheel_fl" >
+    <mu1>1.75</mu1>
+    <mu2>1.75</mu2>
+  </gazebo>
+
+  <gazebo reference="wheel_fr" >
+    <mu1>1.75</mu1>
+    <mu2>1.75</mu2>
+  </gazebo>
+
+  <gazebo reference="wheel_rl" >
+    <mu1>1.75</mu1>
+    <mu2>1.75</mu2>
+  </gazebo>
+
+  <gazebo reference="wheel_rr" >
+    <mu1>1.75</mu1>
+    <mu2>1.75</mu2>
+  </gazebo>
+
+  <gazebo>
+      <plugin name='ackermann_drive' filename='libgazebo_ros_ackermann_drive.so'>
+
+      <ros>
+        <namespace>abra</namespace>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+        <remapping>distance:=distance</remapping>
+      </ros>
+
+      <update_rate>100.0</update_rate>
+
+      <!-- wheels -->
+      <front_left_joint>wheel_fl_joint</front_left_joint>
+      <front_right_joint>wheel_fr_joint</front_right_joint>
+      <rear_left_joint>wheel_rl_joint</rear_left_joint>
+      <rear_right_joint>wheel_rr_joint</rear_right_joint>
+      <left_steering_joint>steer_fl_joint</left_steering_joint>
+      <right_steering_joint>steer_fr_joint</right_steering_joint>
+      <steering_wheel_joint>steering_joint</steering_wheel_joint>
+
+
+      <!-- Max absolute steer angle for tyre in radians-->
+      <!-- Any cmd_vel angular z greater than this would be capped -->
+      <max_steer>0.85</max_steer>
+
+      <!-- Max absolute steering angle of steering wheel -->
+      <!-- Max absolute steering angle of steering wheel -->
+      <max_steering_angle>7.85</max_steering_angle>
+
+      <!-- Max absolute linear speed in m/s -->
+      <max_speed>20</max_speed>
+
+      <!-- PID tuning -->
+      <left_steering_pid_gain>4000 0 1</left_steering_pid_gain>
+      <left_steering_i_range>0 0</left_steering_i_range>
+      <right_steering_pid_gain>4000 0 1</right_steering_pid_gain>
+      <right_steering_i_range>0 0</right_steering_i_range>
+      <linear_velocity_pid_gain>4000 0 1</linear_velocity_pid_gain>
+      <linear_velocity_i_range>0 0</linear_velocity_i_range>
+
+      <!-- output -->
+      <publish_odom>false</publish_odom>
+      <publish_odom_tf>false</publish_odom_tf>
+      <publish_wheel_tf>true</publish_wheel_tf>
+      <publish_distance>true</publish_distance>
+
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_link</robot_base_frame>
+
+    </plugin>
+  </gazebo>
+</robot>
